@@ -5,6 +5,7 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.annotation.PropertyAccessor;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.jsontype.impl.LaissezFaireSubTypeValidator;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.connection.RedisStandaloneConfiguration;
@@ -18,7 +19,10 @@ import java.time.Duration;
 @Configuration
 public class RedisConfig {
 
+    @Value(("${spring.data.redis.host}"))
     private String redisHost;
+
+    @Value( ("${spring.data.redis.port}"))
     private int redisPort;
 
     /*
@@ -40,19 +44,22 @@ public class RedisConfig {
     RedisTemplate<String, Object> redisTemplate() {
         RedisTemplate<String, Object> redisTemplate = new RedisTemplate<>();
         redisTemplate.setConnectionFactory(jedisConnectionFactory());
+        //Key
         redisTemplate.setKeySerializer(this.jackson2JsonRedisSerializer());
-        return template;
+        //Value
+        redisTemplate.setValueSerializer(this.jackson2JsonRedisSerializer());
+        //value hashmap
+        redisTemplate.setHashValueSerializer(this.jackson2JsonRedisSerializer());
+
+        return redisTemplate;
     }
 
     protected Jackson2JsonRedisSerializer<Object> jackson2JsonRedisSerializer() {
-        Jackson2JsonRedisSerializer<Object> jackson2JsonRedisSerializer = new Jackson2JsonRedisSerializer<>(Object.class);
         ObjectMapper objectMapper = new ObjectMapper();
         objectMapper.setVisibility(PropertyAccessor.ALL , JsonAutoDetect.Visibility.ANY);
         objectMapper.activateDefaultTyping(LaissezFaireSubTypeValidator.instance ,
-                ObjectMapper.DefaultTyping.NON_FINAL,
-                JsonTypeInfo.As.WRAPPER_ARRAY);
-        jackson2JsonRedisSerializer.setObjectMapper(objectMapper);
-        return jackson2JsonRedisSerializer;
+                ObjectMapper.DefaultTyping.NON_FINAL, JsonTypeInfo.As.WRAPPER_ARRAY);
+        return new Jackson2JsonRedisSerializer<>(objectMapper, Object.class);
     }
 
 

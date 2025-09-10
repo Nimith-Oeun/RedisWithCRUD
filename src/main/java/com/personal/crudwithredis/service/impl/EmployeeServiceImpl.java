@@ -17,7 +17,7 @@ import java.util.Objects;
 public class EmployeeServiceImpl implements EmployeeService {
 
     private final static String EMPLOYEE_KEY = "employee";
-    private final RedisTemplate<String, Objects> redisTemplate;
+    private final RedisTemplate<String, Object> redisTemplate;
     private HashOperations<String, Long, Employee> hashOperations;
 
     @PostConstruct
@@ -28,35 +28,41 @@ public class EmployeeServiceImpl implements EmployeeService {
     @Override
     public void saveEmployee(Employee employee) {
 
+        hashOperations.put(EMPLOYEE_KEY, employee.getId(), employee);
+
     }
 
     @Override
     public void updateEmployee(Employee employee) {
+
+        hashOperations.put(EMPLOYEE_KEY, employee.getId(), employee);
 
     }
 
     @Override
     public void deleteEmployee(Long id) {
 
+        hashOperations.delete(EMPLOYEE_KEY, id);
+
     }
 
     @Override
     public Employee findbyid(Long id) {
-        return null;
+        return hashOperations.get(EMPLOYEE_KEY, id);
     }
 
     @Override
     public List<Employee> getAllEmployees(String keys) {
-        return List.of();
+        return hashOperations.values(keys);
     }
 
     @Override
     public List<Employee> findEmployeeById(List<Long> id) {
-        return List.of();
+        return hashOperations.multiGet(EMPLOYEE_KEY, id);
     }
 
     @Override
     public Map<Long, Employee> getAll() {
-        return Map.of();
+        return hashOperations.entries(EMPLOYEE_KEY);
     }
 }
